@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  icon        String    @default("Tag")
+  description String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  description    String
+  price          Float
+  compareAtPrice Float?
+  brand          String   @default("Z Shop")
+  stock          Int      @default(0)
+  rating         Float    @default(0)
+  reviewCount    Int      @default(0)
+  images         String   @default("[]")
+  features       String   @default("[]")
+  isFeatured     Boolean  @default(false)
+  isDeal         Boolean  @default(false)
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+  reviews        Review[]
+  orderItems     OrderItem[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  author    String
+  rating    Float
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  email         String
+  fullName      String
+  address       String
+  city          String
+  state         String
+  zip           String
+  country       String
+  phone         String
+  subtotal      Float
+  shipping      Float
+  tax           Float
+  total         Float
+  paymentMethod String      @default("card")
+  paymentLast4  String      @default("")
+  status        String      @default("paid")
+  itemsJson     String      @default("[]")
+  createdAt     DateTime    @default(now())
+  items         OrderItem[]
+
+  @@index([email])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  image     String
+  price     Float
+  quantity  Int
+
+  @@index([orderId])
+}
